@@ -1,0 +1,35 @@
+# Personal datasets, generated indexes, and local request data
+/data/
+/retrieval/data/
+/docs/
+/rag.docx
+
+# Auxiliary scripts excluded by request
+/scripts/
+/query-rewrite/scripts/
+/retrieval/scripts/
+/tests/
+
+# Local secrets and environment configuration
+.env
+.env.*
+!.env.example
+
+# Python bytecode, test cache, and virtual environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# Test code is intentionally not ignored
+
+# Local databases, logs, and generated artifacts
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.sqlite3-*
+*.db
+*.db-*
+*.log

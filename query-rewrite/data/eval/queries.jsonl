@@ -1,0 +1,50 @@
+{"id": 1, "type": "事实数字", "query": "老员工休假怎么算？", "history": [], "expected_category": "人力资源", "expected_terms": ["带薪年休假", "累计工作年限"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 2, "type": "事实数字", "query": "结婚能休几天婚假？", "history": [], "expected_category": "人力资源", "expected_terms": ["婚假"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 3, "type": "事实数字", "query": "探亲假一次能休多少天？", "history": [], "expected_category": "人力资源", "expected_terms": ["探亲假"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 4, "type": "事实数字", "query": "生了孩子能休多久的假？", "history": [], "expected_category": "人力资源", "expected_terms": ["产假", "延长生育假"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 5, "type": "事实数字", "query": "我爱人生孩子，我能休陪产假吗？", "history": [], "expected_category": "人力资源", "expected_terms": ["陪产假"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 6, "type": "事实数字", "query": "病假工资怎么发？", "history": [], "expected_category": "人力资源", "expected_terms": ["病假"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 7, "type": "事实数字", "query": "爷爷奶奶去世了能请丧假吗？", "history": [], "expected_category": "人力资源", "expected_terms": ["丧假"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 8, "type": "事实数字", "query": "孩子不到三岁有育儿假吗？", "history": [], "expected_category": "人力资源", "expected_terms": ["育儿假"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 9, "type": "事实数字", "query": "献血能休假吗？", "history": [], "expected_category": "人力资源", "expected_terms": ["义务献血"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 10, "type": "事实数字", "query": "住房补贴标准是多少？", "history": [], "expected_category": "人力资源", "expected_terms": ["住房补贴"], "need_retrieval": true, "gold_docs": ["职工取暖补贴和住房补贴实施细则"]}
+{"id": 11, "type": "事实数字", "query": "骨干人才的岗位津贴发多少？", "history": [], "expected_category": "人力资源", "expected_terms": ["骨干人才岗位津贴"], "need_retrieval": true, "gold_docs": ["骨干人才岗位津贴实施办法"]}
+{"id": 12, "type": "事实数字", "query": "医疗期最长可以给多久？", "history": [], "expected_category": "人力资源", "expected_terms": ["医疗期"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 13, "type": "流程手续", "query": "出差的机票回来怎么报销？", "history": [], "expected_category": "财务管理", "expected_terms": ["差旅费", "城市间交通费"], "need_retrieval": true, "gold_docs": ["差旅费管理办法"]}
+{"id": 14, "type": "流程手续", "query": "出差之前需要先申请吗？", "history": [], "expected_category": "财务管理", "expected_terms": ["出差申请单"], "need_retrieval": true, "gold_docs": ["差旅费管理办法"]}
+{"id": 15, "type": "流程手续", "query": "我想盖个公章走什么流程？", "history": [], "expected_category": "公共管理", "expected_terms": ["印章"], "need_retrieval": true, "gold_docs": ["印章和资质证照管理办法"]}
+{"id": 16, "type": "流程手续", "query": "请假要找谁审批？", "history": [], "expected_category": "人力资源", "expected_terms": ["请（休）假", "审批"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 17, "type": "流程手续", "query": "出差可以先借一笔钱吗？", "history": [], "expected_category": "财务管理", "expected_terms": ["借款"], "need_retrieval": true, "gold_docs": ["借款报销管理办法"]}
+{"id": 18, "type": "流程手续", "query": "集体户口怎么办理？", "history": [], "expected_category": "人力资源", "expected_terms": ["集体户口"], "need_retrieval": true, "gold_docs": ["集体户口管理办法"]}
+{"id": 19, "type": "流程手续", "query": "人才房怎么申请？", "history": [], "expected_category": "公共管理", "expected_terms": ["人才公共租赁住房"], "need_retrieval": true, "gold_docs": ["人才公共租赁住房管理实施细则"]}
+{"id": 20, "type": "流程手续", "query": "出差坐飞机需要谁批准？", "history": [], "expected_category": "财务管理", "expected_terms": ["差旅费", "审批"], "need_retrieval": true, "gold_docs": ["差旅费管理办法"]}
+{"id": 21, "type": "条件资格", "query": "劳务外包的人也能休年假吗？", "history": [], "expected_category": "人力资源", "expected_terms": ["劳务外包", "带薪年休假"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 22, "type": "条件资格", "query": "退休返聘的还能领取暖补贴吗？", "history": [], "expected_category": "人力资源", "expected_terms": ["返聘", "取暖补贴"], "need_retrieval": true, "gold_docs": ["职工取暖补贴和住房补贴实施细则", "返聘退休人员管理办法"]}
+{"id": 23, "type": "条件资格", "query": "入职不满一年能请探亲假吗？", "history": [], "expected_category": "人力资源", "expected_terms": ["探亲假"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 24, "type": "条件资格", "query": "哺乳期有什么照顾政策？", "history": [], "expected_category": "人力资源", "expected_terms": ["哺乳假"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法", "女职工劳动保护管理办法"]}
+{"id": 25, "type": "条件资格", "query": "工作不满一年有没有年假？", "history": [], "expected_category": "人力资源", "expected_terms": ["带薪年休假"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 26, "type": "条件资格", "query": "内退的人还算公司员工吗？", "history": [], "expected_category": "人力资源", "expected_terms": ["内退", "不在岗"], "need_retrieval": true, "gold_docs": ["人员流动管理办法"]}
+{"id": 27, "type": "条件资格", "query": "借调过来的同事出差费用谁报销？", "history": [], "expected_category": "财务管理", "expected_terms": ["借调", "差旅费"], "need_retrieval": true, "gold_docs": ["差旅费管理办法"]}
+{"id": 28, "type": "条件资格", "query": "休产假期间工资照发吗？", "history": [], "expected_category": "人力资源", "expected_terms": ["产假", "工资"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 29, "type": "多轮指代", "query": "那再婚呢？", "history": ["婚假能休几天？", "根据《请（休）假管理办法》，婚假为国家规定3天加公司增加7天，共10天。"], "expected_category": "人力资源", "expected_terms": ["婚假"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 30, "type": "多轮指代", "query": "我工作8年了有几天？", "history": ["年假是怎么算的？"], "expected_category": "人力资源", "expected_terms": ["带薪年休假", "累计工作年限"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 31, "type": "多轮指代", "query": "那伙食补助呢？", "history": ["出差住宿标准是多少？", "住宿费按出差目的地城市分级限额报销。"], "expected_category": "财务管理", "expected_terms": ["伙食补助费"], "need_retrieval": true, "gold_docs": ["差旅费管理办法"]}
+{"id": 32, "type": "多轮指代", "query": "工伤假也一样吗？", "history": ["病假期间工资怎么算？", "病假医疗期按工龄核定，病假工资按北京市最低工资标准的80%执行。"], "expected_category": "人力资源", "expected_terms": ["工伤假"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 33, "type": "多轮指代", "query": "能出国探亲吗？", "history": ["探亲假需要什么条件？"], "expected_category": "人力资源", "expected_terms": ["出国探亲假"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 34, "type": "多轮指代", "query": "那发论文有没有奖励？", "history": ["申请专利公司有奖励吗？"], "expected_category": "科研生产", "expected_terms": ["科技成果", "奖励"], "need_retrieval": true, "gold_docs": ["科技成果管理办法", "技术创新奖励细则"]}
+{"id": 35, "type": "计算判断", "query": "我累计工作12年了，今年年假有几天？", "history": [], "expected_category": "人力资源", "expected_terms": ["带薪年休假", "累计工作年限"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 36, "type": "计算判断", "query": "我今年请了3个月病假，还能休年假吗？", "history": [], "expected_category": "人力资源", "expected_terms": ["病假", "带薪年休假"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 37, "type": "计算判断", "query": "出差5天伙食补助一共能报多少？", "history": [], "expected_category": "财务管理", "expected_terms": ["伙食补助费", "差旅费"], "need_retrieval": true, "gold_docs": ["差旅费管理办法"]}
+{"id": 38, "type": "计算判断", "query": "一个月迟到4次会怎么样？", "history": [], "expected_category": "人力资源", "expected_terms": ["迟到", "旷工"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法", "员工考勤管理办法"]}
+{"id": 39, "type": "计算判断", "query": "四年一次的探亲假能给几天？", "history": [], "expected_category": "人力资源", "expected_terms": ["探亲假"], "need_retrieval": true, "gold_docs": ["请（休）假管理办法"]}
+{"id": 40, "type": "制度元信息", "query": "公司有没有管出差报销的制度？", "history": [], "expected_category": "财务管理", "expected_terms": ["差旅费管理办法", "借款报销"], "need_retrieval": true, "gold_docs": ["差旅费管理办法", "借款报销管理办法"]}
+{"id": 41, "type": "制度元信息", "query": "保密的事归哪个部门管？", "history": [], "expected_category": "公共管理", "expected_terms": ["保密"], "need_retrieval": true, "gold_docs": []}
+{"id": 42, "type": "制度元信息", "query": "最新的预算管理制度是哪个版本？", "history": [], "expected_category": "财务管理", "expected_terms": ["全面预算管理办法"], "need_retrieval": true, "gold_docs": ["全面预算管理办法"]}
+{"id": 43, "type": "制度元信息", "query": "差旅费管理办法的文号是多少？", "history": [], "expected_category": "财务管理", "expected_terms": ["差旅费管理办法", "文号"], "need_retrieval": true, "gold_docs": ["差旅费管理办法"]}
+{"id": 44, "type": "闲聊超域", "query": "今天天气怎么样？", "history": [], "expected_category": "", "expected_terms": [], "need_retrieval": false, "gold_docs": []}
+{"id": 45, "type": "闲聊超域", "query": "你是谁？", "history": [], "expected_category": "", "expected_terms": [], "need_retrieval": false, "gold_docs": []}
+{"id": 46, "type": "闲聊超域", "query": "食堂中午有什么菜？", "history": [], "expected_category": "", "expected_terms": [], "need_retrieval": false, "gold_docs": []}
+{"id": 47, "type": "闲聊超域", "query": "给我讲个笑话吧", "history": [], "expected_category": "", "expected_terms": [], "need_retrieval": false, "gold_docs": []}
+{"id": 48, "type": "多版本时效", "query": "党支部考核现在按哪个细则执行？", "history": [], "expected_category": "党的建设", "expected_terms": ["党支部工作考核实施细则"], "need_retrieval": true, "gold_docs": ["党支部工作考核实施细则"]}
+{"id": 49, "type": "多版本时效", "query": "老的预算管理办法还能用吗？", "history": [], "expected_category": "财务管理", "expected_terms": ["全面预算管理办法"], "need_retrieval": true, "gold_docs": ["全面预算管理办法"]}
+{"id": 50, "type": "多版本时效", "query": "新闻宣传归哪个制度管，最新是哪年的？", "history": [], "expected_category": "党的建设", "expected_terms": ["新闻宣传工作管理办法"], "need_retrieval": true, "gold_docs": ["新闻宣传工作管理办法"]}

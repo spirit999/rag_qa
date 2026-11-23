@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "n_samples": 45,
+    "n_gold_docs": 17,
+    "n_chunks": 3235,
+    "n_docs": 129,
+    "avg_chunk_chars": 230,
+    "bm25_terms_groups": 232,
+    "embed_model": "Qwen3-Embedding-0.6B",
+    "fusion": "RRF(k=60)"
+  },
+  "results": {
+    "raw|bm25|no_synonym": {
+      "Hit@1": 0.644,
+      "Hit@3": 0.756,
+      "Hit@5": 0.822,
+      "Hit@10": 0.889,
+      "MRR@10": 0.721
+    },
+    "raw|bm25": {
+      "Hit@1": 0.733,
+      "Hit@3": 0.844,
+      "Hit@5": 0.867,
+      "Hit@10": 0.933,
+      "MRR@10": 0.8
+    },
+    "raw|dense": {
+      "Hit@1": 0.889,
+      "Hit@3": 0.978,
+      "Hit@5": 1.0,
+      "Hit@10": 1.0,
+      "MRR@10": 0.938
+    },
+    "raw|hybrid": {
+      "Hit@1": 0.889,
+      "Hit@3": 0.956,
+      "Hit@5": 0.978,
+      "Hit@10": 0.978,
+      "MRR@10": 0.928
+    },
+    "rewrite|bm25": {
+      "Hit@1": 0.889,
+      "Hit@3": 1.0,
+      "Hit@5": 1.0,
+      "Hit@10": 1.0,
+      "MRR@10": 0.937
+    },
+    "rewrite|dense": {
+      "Hit@1": 0.933,
+      "Hit@3": 1.0,
+      "Hit@5": 1.0,
+      "Hit@10": 1.0,
+      "MRR@10": 0.963
+    },
+    "rewrite|hybrid": {
+      "Hit@1": 0.956,
+      "Hit@3": 1.0,
+      "Hit@5": 1.0,
+      "Hit@10": 1.0,
+      "MRR@10": 0.978
+    }
+  },
+  "conclusion": "生产路径为 rewrite+hybrid；raw+hybrid 因 BM25 噪声拉低融合效果，故 rewrite 是必要前置。"
+}

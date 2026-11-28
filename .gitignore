@@ -3,6 +3,7 @@
 /retrieval/data/
 /docs/
 /rag.docx
+/time.txt
 
 # Auxiliary scripts excluded by request
 /scripts/

@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from pathlib import Path
+import threading
 
 from .config import RERANK_INSTRUCTION, RERANK_MODEL_PATH
 
@@ -25,7 +26,8 @@ def format_pair(instruct, query, doc):
 
 
 class QwenReranker:
-    def __init__(self, path=RERANK_MODEL_PATH, max_len=640, batch_size=16):
+    def __init__(self, path=RERANK_MODEL_PATH, max_len=640, batch_size=16,
+                 inference_lock=None):
         path = Path(path)
         if not (
             (path / 'model.safetensors').exists()
@@ -38,6 +40,7 @@ class QwenReranker:
             )
         self.max_len = max_len
         self.batch_size = batch_size
+        self.inference_lock = inference_lock or threading.RLock()
         self.tokenizer = AutoTokenizer.from_pretrained(str(path), padding_side='left')
         self.model = AutoModelForCausalLM.from_pretrained(str(path), dtype=torch.float32)
         self.model.eval()
@@ -47,8 +50,16 @@ class QwenReranker:
         self.token_no = self.tokenizer.convert_tokens_to_ids('no')
         self.budget = max_len - len(self.prefix_ids) - len(self.suffix_ids)
 
-    @torch.no_grad()
     def score(self, query, docs, instruct=RERANK_INSTRUCTION, batch_size=None, show_progress=False):
+        with self.inference_lock:
+            return self._score(
+                query, docs, instruct=instruct, batch_size=batch_size,
+                show_progress=show_progress,
+            )
+
+    @torch.no_grad()
+    def _score(self, query, docs, instruct=RERANK_INSTRUCTION,
+               batch_size=None, show_progress=False):
         bs = batch_size or self.batch_size
         pairs = [format_pair(instruct, query, d) for d in docs]
         scores = []

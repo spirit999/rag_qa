@@ -26,6 +26,8 @@ class EventStore:
                     rerank_ms REAL NOT NULL DEFAULT 0,
                     generation_ms REAL NOT NULL DEFAULT 0,
                     verification_ms REAL NOT NULL DEFAULT 0,
+                    lock_wait_ms REAL NOT NULL DEFAULT 0,
+                    pipeline_load_ms REAL NOT NULL DEFAULT 0,
                     rewrite_cache_hit INTEGER NOT NULL DEFAULT 0,
                     answer_cache_hit INTEGER NOT NULL DEFAULT 0,
                     document_count INTEGER NOT NULL DEFAULT 0,
@@ -39,6 +41,14 @@ class EventStore:
                 if 'rerank_ms' not in columns:
                     db.execute(
                         'ALTER TABLE request_events ADD COLUMN rerank_ms REAL NOT NULL DEFAULT 0'
+                    )
+                if 'lock_wait_ms' not in columns:
+                    db.execute(
+                        'ALTER TABLE request_events ADD COLUMN lock_wait_ms REAL NOT NULL DEFAULT 0'
+                    )
+                if 'pipeline_load_ms' not in columns:
+                    db.execute(
+                        'ALTER TABLE request_events ADD COLUMN pipeline_load_ms REAL NOT NULL DEFAULT 0'
                     )
                 db.execute('''
                 CREATE TABLE IF NOT EXISTS user_feedback (
@@ -62,14 +72,15 @@ class EventStore:
                 INSERT OR REPLACE INTO request_events (
                     request_id, created_at, route, status, duration_ms,
                     rewrite_ms, retrieval_ms, generation_ms, verification_ms,
-                    rerank_ms, rewrite_cache_hit, answer_cache_hit, document_count,
-                    citation_count, error_type
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    rerank_ms, lock_wait_ms, pipeline_load_ms, rewrite_cache_hit,
+                    answer_cache_hit, document_count, citation_count, error_type
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (
                     event['request_id'], now, event['route'], event['status'],
                     event.get('duration_ms', 0), event.get('rewrite_ms', 0),
                     event.get('retrieval_ms', 0), event.get('generation_ms', 0),
                     event.get('verification_ms', 0), event.get('rerank_ms', 0),
+                    event.get('lock_wait_ms', 0), event.get('pipeline_load_ms', 0),
                     int(event.get('rewrite_cache_hit', False)),
                     int(event.get('answer_cache_hit', False)),
                     event.get('document_count', 0), event.get('citation_count', 0),
@@ -95,7 +106,8 @@ class EventStore:
         with closing(self._connect()) as db:
             rows = db.execute('''
                 SELECT status, duration_ms, rewrite_ms, retrieval_ms,
-                       generation_ms, verification_ms, answer_cache_hit, rerank_ms
+                       generation_ms, verification_ms, rewrite_cache_hit,
+                       answer_cache_hit, rerank_ms, lock_wait_ms, pipeline_load_ms
                 FROM request_events
                 ORDER BY created_at DESC LIMIT ?
             ''', (limit,)).fetchall()
@@ -108,6 +120,7 @@ class EventStore:
                 'sample_size': 0,
                 'status_counts': {},
                 'latency_ms': {},
+                'rewrite_cache_hits': 0,
                 'answer_cache_hits': 0,
                 'feedback_counts': {str(r): c for r, c in feedback},
             }
@@ -117,7 +130,9 @@ class EventStore:
             'retrieval': 3,
             'generation': 4,
             'verification': 5,
-            'rerank': 7,
+            'rerank': 8,
+            'lock_wait': 9,
+            'pipeline_load': 10,
         }
         timings = {}
         for name, idx in fields.items():
@@ -133,6 +148,7 @@ class EventStore:
             'sample_size': len(rows),
             'status_counts': status_counts,
             'latency_ms': timings,
-            'answer_cache_hits': sum(int(row[6]) for row in rows),
+            'rewrite_cache_hits': sum(int(row[6]) for row in rows),
+            'answer_cache_hits': sum(int(row[7]) for row in rows),
             'feedback_counts': {str(r): c for r, c in feedback},
         }

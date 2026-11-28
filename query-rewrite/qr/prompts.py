@@ -18,12 +18,12 @@ SYSTEM_TEMPLATE = '''你是企业制度智能问答系统的查询理解模块�
 【硬性要求】
 1. 只输出一个 JSON 对象，不要输出任何其他文字、解释或 markdown 代码块。
 2. 忠实原意：不得引入用户没有提到的事项、主体或数字；不得回答用户的问题本身。
-3. 术语对齐：keywords 和 sub_queries 必须使用公文规范措辞（参考下方术语表），不要用口语词；涉及具体制度时，必须使用下方制度全称清单中的全称——用户提到简写或近似名时校正为全称（如用户说 预算管理制度，应写 全面预算管理办法）。
+3. 术语对齐：keywords 和 sub_queries 必须使用公文规范措辞（参考下方匹配术语），不要用口语词；涉及具体制度时，优先使用下方匹配到的制度全称——用户提到简写或近似名时校正为全称（如用户说 预算管理制度，应写 全面预算管理办法）。
 4. 今天是 {today}。涉及制度版本时按 time_scope 标注。
 
 {anchors}
 
-【制度全称清单（按大类）】
+【匹配到的制度全称（按大类）】
 {titles}
 
 【输出 JSON 字段】
@@ -42,16 +42,6 @@ SYSTEM_TEMPLATE = '''你是企业制度智能问答系统的查询理解模块�
 
 FEWSHOT = [
     (
-        '老员工休假怎么算？', None,
-        {
-            'standalone_query': '老员工的带薪年休假天数如何根据累计工作年限计算',
-            'intent': '事实数字',
-            'keywords': ['带薪年休假', '累计工作年限', '年休假天数'],
-            'sub_queries': ['员工累计工作年限对应的带薪年休假天数规定', '请（休）假管理办法中年休假计算规则'],
-            'category': '人力资源', 'subject': '员工', 'time_scope': 'unspecified', 'need_retrieval': True,
-        },
-    ),
-    (
         '出差坐飞机报销要什么手续？', None,
         {
             'standalone_query': '员工出差乘坐飞机的差旅费报销需要哪些手续和审批',
@@ -69,25 +59,6 @@ FEWSHOT = [
             'keywords': ['病假', '医疗期', '病假工资'],
             'sub_queries': ['请（休）假管理办法中病假天数与医疗期规定', '病假期间工资待遇标准'],
             'category': '人力资源', 'subject': '员工', 'time_scope': 'unspecified', 'need_retrieval': True,
-        },
-    ),
-    (
-        '食堂今天中午吃什么？', None,
-        {
-            'standalone_query': '食堂今天中午吃什么',
-            'intent': '闲聊超域',
-            'keywords': [], 'sub_queries': [],
-            'category': '', 'subject': '', 'time_scope': 'unspecified', 'need_retrieval': False,
-        },
-    ),
-    (
-        '现在执行的全面预算管理办法是哪一版？', None,
-        {
-            'standalone_query': '公司现行有效的全面预算管理办法版本',
-            'intent': '制度元信息',
-            'keywords': ['全面预算管理办法', '版本', '文号'],
-            'sub_queries': ['全面预算管理办法最新修订版本', '全面预算管理制度现行文号'],
-            'category': '财务管理', 'subject': '', 'time_scope': 'latest', 'need_retrieval': True,
         },
     ),
 ]

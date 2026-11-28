@@ -74,6 +74,12 @@ def _load_pipeline():
     return _pipeline
 
 
+def _load_pipeline_timed():
+    started = time.perf_counter()
+    pipeline = _load_pipeline()
+    return pipeline, (time.perf_counter() - started) * 1000
+
+
 def _admin_required(token):
     expected = os.environ.get('RAG_ADMIN_TOKEN')
     if not expected:
@@ -95,8 +101,10 @@ def _record_result(request_id, route, started, result):
         'request_id': request_id,
         'route': route,
         'status': answer.get('status', 'ok'),
-        'duration_ms': timings.get('total', (time.perf_counter() - started) * 1000),
+        'duration_ms': (time.perf_counter() - started) * 1000,
         'rewrite_ms': timings.get('rewrite', 0),
+        'lock_wait_ms': timings.get('lock_wait', 0),
+        'pipeline_load_ms': timings.get('pipeline_load', 0),
         'retrieval_ms': timings.get('retrieval', 0),
         'rerank_ms': timings.get('rerank', 0),
         'generation_ms': timings.get('generation', 0),
@@ -147,13 +155,20 @@ def chat(request: ChatRequest):
     request_id = str(uuid.uuid4())
     started = time.perf_counter()
     try:
-        result = _load_pipeline().run(
+        pipeline, pipeline_load_ms = _load_pipeline_timed()
+        result = pipeline.run(
             question=request.question,
             history=request.history or [],
             topk_chunks=request.topk_chunks,
             topk_docs=request.topk_docs,
             mode=request.mode,
             rerank=request.rerank,
+        )
+        result.setdefault('timings_ms', {})['pipeline_load'] = round(
+            pipeline_load_ms, 2,
+        )
+        result['timings_ms']['total'] = round(
+            (time.perf_counter() - started) * 1000, 2,
         )
         result['request_id'] = request_id
         _sanitize_rewrite(result)
@@ -176,7 +191,7 @@ def chat_stream(request: ChatRequest):
             yield 'data: %s\n\n' % json.dumps(
                 {'type': 'stage', 'stage': 'starting'}, ensure_ascii=False,
             )
-            pipeline = _load_pipeline()
+            pipeline, pipeline_load_ms = _load_pipeline_timed()
             stream = pipeline.run_stream(
                 question=request.question,
                 history=request.history or [],
@@ -188,6 +203,12 @@ def chat_stream(request: ChatRequest):
             for event in stream:
                 if event['type'] == 'complete':
                     result = event['result']
+                    result.setdefault('timings_ms', {})['pipeline_load'] = round(
+                        pipeline_load_ms, 2,
+                    )
+                    result['timings_ms']['total'] = round(
+                        (time.perf_counter() - started) * 1000, 2,
+                    )
                     result['request_id'] = request_id
                     _sanitize_rewrite(result)
                     _record_result(request_id, '/api/chat/stream', started, result)
@@ -220,19 +241,24 @@ def rewrite(request: RewriteRequest):
     request_id = str(uuid.uuid4())
     started = time.perf_counter()
     try:
-        result = _load_pipeline().rewrite_only(
+        pipeline, pipeline_load_ms = _load_pipeline_timed()
+        result = pipeline.rewrite_only(
             request.question, history=request.history or [],
         )
+        timings = result.setdefault('timings_ms', {})
+        timings['pipeline_load'] = round(pipeline_load_ms, 2)
+        timings['total'] = round((time.perf_counter() - started) * 1000, 2)
         result['request_id'] = request_id
         _sanitize_rewrite(result)
         rewrite = result.get('rewrite', {})
-        timings = result.get('timings_ms', {})
         _event_store.record_request({
             'request_id': request_id,
             'route': '/api/rewrite',
             'status': 'ok',
-            'duration_ms': timings.get('rewrite', 0),
+            'duration_ms': timings.get('total', 0),
             'rewrite_ms': timings.get('rewrite', 0),
+            'lock_wait_ms': timings.get('lock_wait', 0),
+            'pipeline_load_ms': timings.get('pipeline_load', 0),
             'rewrite_cache_hit': rewrite.get('from_cache', False),
         })
         return result
@@ -248,15 +274,19 @@ def retrieve(request: RetrieveRequest, x_admin_token: Optional[str] = Header(def
     request_id = str(uuid.uuid4())
     started = time.perf_counter()
     try:
-        pipeline = _load_pipeline()
+        pipeline, pipeline_load_ms = _load_pipeline_timed()
         rewritten = request.rewrite
         rewrite_ms = 0
+        rewrite_lock_wait_ms = 0
         if rewritten is None:
             rewrite_result = pipeline.rewrite_only(
                 request.question, history=request.history or [],
             )
             rewritten = rewrite_result['rewrite']
             rewrite_ms = rewrite_result.get('timings_ms', {}).get('rewrite', 0)
+            rewrite_lock_wait_ms = rewrite_result.get(
+                'timings_ms', {},
+            ).get('lock_wait', 0)
         result = pipeline.retrieve_only(
             request.question,
             rewritten,
@@ -267,12 +297,18 @@ def retrieve(request: RetrieveRequest, x_admin_token: Optional[str] = Header(def
         )
         result['request_id'] = request_id
         timings = result.get('timings_ms', {})
+        timings['pipeline_load'] = round(pipeline_load_ms, 2)
+        timings['lock_wait'] = round(
+            timings.get('lock_wait', 0) + rewrite_lock_wait_ms, 2,
+        )
         _event_store.record_request({
             'request_id': request_id,
             'route': '/api/retrieve',
             'status': 'ok',
             'duration_ms': (time.perf_counter() - started) * 1000,
             'rewrite_ms': rewrite_ms,
+            'lock_wait_ms': timings.get('lock_wait', 0),
+            'pipeline_load_ms': pipeline_load_ms,
             'retrieval_ms': timings.get('retrieval', 0),
             'rerank_ms': timings.get('rerank', 0),
             'document_count': len(result.get('context', {}).get('documents', [])),
@@ -290,6 +326,8 @@ def feedback(request: FeedbackRequest):
         raise HTTPException(status_code=422, detail='rating 必须为 1 或 -1。')
     if not _event_store.record_feedback(request.request_id, request.rating):
         raise HTTPException(status_code=404, detail='请求记录不存在。')
+    if request.rating < 0 and _pipeline is not None:
+        _pipeline.clear_answer_cache()
     return {'status': 'recorded'}
 
 
@@ -307,7 +345,7 @@ def update_index(x_admin_token: Optional[str] = Header(default=None)):
     try:
         pipeline = _load_pipeline()
         from hr.index_manager import IncrementalIndexManager
-        with pipeline.inference_lock:
+        with pipeline.index_update_lock:
             result = IncrementalIndexManager().update(pipeline.embedder)
             result['active_index'] = pipeline.reload_index()
         result['request_id'] = request_id

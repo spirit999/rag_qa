@@ -1,5 +1,6 @@
 import csv
 from collections import defaultdict
+from functools import lru_cache
 
 from .config import CATEGORIES, GLOSSARY_DIR
 
@@ -7,17 +8,29 @@ CORE_CSV = GLOSSARY_DIR / '01_核心术语对照表.csv'
 DOC_LIST_CSV = GLOSSARY_DIR / '00_制度清单.csv'
 
 
-def title_digest(path=DOC_LIST_CSV, max_chars=2400):
-    """按大类分组的制度全称清单（去重，多版本只保留一个），注入 prompt 用。"""
+def title_digest(path=DOC_LIST_CSV, max_chars=2400, categories=None):
+    """按需返回制度全称，避免每个请求注入完整清单。"""
+    selected_categories = (
+        tuple(categories) if categories is not None else None
+    )
+    return _cached_title_digest(str(path), max_chars, selected_categories)
+
+
+@lru_cache(maxsize=32)
+def _cached_title_digest(path, max_chars, categories):
     by_cat = defaultdict(list)
     seen = set()
+    selected_categories = set(categories) if categories is not None else None
     with open(path, encoding='utf-8-sig') as f:
         for r in csv.DictReader(f):
+            category = r['大类'].strip()
+            if selected_categories is not None and category not in selected_categories:
+                continue
             t = r['制度名称'].strip()
             if not t or t in seen:
                 continue
             seen.add(t)
-            by_cat[r['大类'].strip()].append(t)
+            by_cat[category].append(t)
     lines = []
     total = 0
     for cat in CATEGORIES:
@@ -55,9 +68,17 @@ class Glossary:
             key=len, reverse=True,
         )
 
-    def prompt_digest(self, max_chars=2200):
+    def prompt_digest(self, max_chars=2200, query=None):
         groups = defaultdict(list)
-        for row in self.rows:
+        rows = self.rows
+        if query is not None:
+            matches = set(self.match_terms(query))
+            rows = [
+                row for row in self.rows
+                if row['term'] in matches
+                or any(alias in matches for alias in row['colloquial'])
+            ]
+        for row in rows:
             alias = ('（' + '/'.join(row['colloquial']) + '）') if row['colloquial'] else ''
             groups[row['category']].append(row['term'] + alias)
         lines = []

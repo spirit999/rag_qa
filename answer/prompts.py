@@ -39,3 +39,23 @@ def build_answer_messages(question, rewrite, context_text):
         {'role': 'system', 'content': SYSTEM_PROMPT},
         {'role': 'user', 'content': json.dumps(user, ensure_ascii=False)},
     ]
+
+
+def build_small_answer_messages(question, context_text):
+    return [
+        {
+            'role': 'system',
+            'content': (
+                '只依据给出的单条企业制度条款回答一个简单数字问题。'
+                '只输出一句简短中文答案，不要 JSON、解释或外部知识；'
+                '条款没有明确答案时只输出“无法确定”。'
+            ),
+        },
+        {
+            'role': 'user',
+            'content': json.dumps({
+                'question': question,
+                'article': context_text,
+            }, ensure_ascii=False),
+        },
+    ]

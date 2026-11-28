@@ -1,3 +1,6 @@
+from contextlib import nullcontext
+import threading
+
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -7,20 +10,23 @@ from .config import EMBED_MODEL_PATH, QUERY_INSTRUCTION
 
 
 class QwenEmbedder:
-    def __init__(self, path=EMBED_MODEL_PATH, max_len=512, batch_size=32):
+    def __init__(self, path=EMBED_MODEL_PATH, max_len=512, batch_size=32,
+                 inference_lock=None):
         self.max_len = max_len
         self.batch_size = batch_size
         self.path = str(path)
+        self.inference_lock = inference_lock or threading.RLock()
         self.tokenizer = AutoTokenizer.from_pretrained(path, padding_side='left')
         self.model = AutoModel.from_pretrained(path, dtype=torch.float32)
         self.model.eval()
 
     @torch.no_grad()
     def encode(self, texts, is_query=False, batch_size=None, max_len=None, show_progress=False):
-        return self._encode_uncached(
-            texts, is_query=is_query, batch_size=batch_size,
-            max_len=max_len, show_progress=show_progress,
-        )
+        with getattr(self, 'inference_lock', nullcontext()):
+            return self._encode_uncached(
+                texts, is_query=is_query, batch_size=batch_size,
+                max_len=max_len, show_progress=show_progress,
+            )
 
     def _encode_uncached(self, texts, is_query=False, batch_size=None,
                          max_len=None, show_progress=False):

@@ -1,7 +1,11 @@
+from collections import OrderedDict
+import copy
+import json
 import re
+import threading
 import time
 
-from .config import CATEGORIES, MAX_REWRITE_NEW_TOKENS
+from .config import CATEGORIES, MAX_REWRITE_NEW_TOKENS, PROMPT_VERSION
 from .glossary import Glossary, title_digest
 from .prompts import build_messages
 from .schema import RewriteResult, parse_llm_output
@@ -31,8 +35,36 @@ class QueryRewriter:
     def __init__(self, llm=None, glossary=None):
         self.llm = llm
         self.glossary = glossary or Glossary()
-        self.digest = self.glossary.prompt_digest()
-        self.titles = title_digest()
+        self._cache = OrderedDict()
+        self._cache_limit = 256
+        self._cache_lock = threading.RLock()
+
+    def _cache_key(self, query, history):
+        return json.dumps(
+            [PROMPT_VERSION, query, history or []],
+            ensure_ascii=False,
+            separators=(',', ':'),
+        )
+
+    def _cache_get(self, query, history):
+        key = self._cache_key(query, history)
+        with self._cache_lock:
+            cached = self._cache.get(key)
+            if cached is None:
+                return None
+            self._cache.move_to_end(key)
+            result = copy.deepcopy(cached)
+        result.from_cache = True
+        result.latency = 0.0
+        return result
+
+    def _cache_put(self, query, history, result):
+        key = self._cache_key(query, history)
+        with self._cache_lock:
+            self._cache[key] = copy.deepcopy(result)
+            self._cache.move_to_end(key)
+            if len(self._cache) > self._cache_limit:
+                self._cache.popitem(last=False)
 
     def _fallback(self, query):
         r = RewriteResult(fallback=True)
@@ -85,7 +117,13 @@ class QueryRewriter:
                     item['query'], item.get('history')):
                 results[i] = self._fast_rewrite(item['query'])
             else:
-                pending.append((i, item))
+                cached = None if force_llm else self._cache_get(
+                    item['query'], item.get('history'),
+                )
+                if cached is not None:
+                    results[i] = cached
+                else:
+                    pending.append((i, item))
         if not pending:
             return results
 
@@ -95,8 +133,16 @@ class QueryRewriter:
             for _, it in chunk:
                 hist = it.get('history')
                 use_hist = hist if needs_history(it['query'], hist) else None
-                msgs.append(build_messages(it['query'], use_hist, self.digest, titles=self.titles))
-            t0 = time.time()
+                prompt_context = ' '.join((use_hist or []) + [it['query']])
+                category = keyword_category_vote(prompt_context, self.glossary)
+                digest = self.glossary.prompt_digest(
+                    max_chars=900, query=prompt_context,
+                )
+                titles = title_digest(categories=[category]) if category else ''
+                msgs.append(build_messages(
+                    it['query'], use_hist, digest, titles=titles,
+                ))
+            t0 = time.perf_counter()
             token_limit = (
                 {'max_new_tokens': MAX_REWRITE_NEW_TOKENS}
                 if getattr(self.llm, 'supports_max_new_tokens', False) else {}
@@ -105,7 +151,7 @@ class QueryRewriter:
                 raws = self.llm.chat_batch(msgs, **token_limit)
             else:
                 raws = [self.llm.chat(m, **token_limit) for m in msgs]
-            latency = (time.time() - t0) / max(len(chunk), 1)
+            latency = (time.perf_counter() - t0) / max(len(chunk), 1)
 
             retry_idx = []
             for j, ((result_index, it), raw) in enumerate(zip(chunk, raws)):
@@ -115,6 +161,8 @@ class QueryRewriter:
                     continue
                 r.latency = round(latency, 3)
                 results[result_index] = r
+                if not force_llm:
+                    self._cache_put(it['query'], it.get('history'), r)
             for j in retry_idx:
                 result_index, it = chunk[j]
                 try:
@@ -127,6 +175,8 @@ class QueryRewriter:
                     r = self._fallback(it['query'])
                 r.latency = round(latency, 3)
                 results[result_index] = r
+                if not force_llm and not r.fallback:
+                    self._cache_put(it['query'], it.get('history'), r)
 
         return results
 

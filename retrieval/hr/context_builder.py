@@ -44,7 +44,7 @@ def _deduplicate_text(text):
     return text
 
 
-def build_context(question, chunks, ranked_candidates, max_chars=12000, topk_docs=5):
+def build_context(question, chunks, ranked_candidates, max_chars=6000, topk_docs=5):
     """将 Rerank/检索候选整理为按制度、章、条去重的完整上下文。"""
     if not ranked_candidates:
         return ContextPack(question=question)
@@ -104,45 +104,58 @@ def build_context(question, chunks, ranked_candidates, max_chars=12000, topk_doc
 
     ranked_docs = sorted(by_doc.values(), key=lambda d: -d['score'])[:topk_docs]
     documents = []
+    lines = []
+    truncated = False
     for doc in ranked_docs:
-        sections = []
+        doc_header = '制度：%s' % doc['doc_title']
+        if doc['doc_number']:
+            doc_header += '（%s）' % doc['doc_number']
+        doc_lines = [doc_header]
+        selected_sections = []
         for section_name, articles in doc['sections'].items():
+            section_lines = []
+            selected_articles = []
             section_articles = sorted(
                 articles.values(),
                 key=lambda a: (a.article != '条款未识别', a.article),
             )
-            sections.append(ContextSection(section_name, section_articles))
-        documents.append(ContextDocument(
-            doc_title=doc['doc_title'],
-            doc_number=doc['doc_number'],
-            category=doc['category'],
-            sections=sections,
-            score=doc['score'],
-        ))
+            for article in section_articles:
+                article_lines = [
+                    '[%s %s]' % (article.article, article.chunk_id),
+                    article.text,
+                ]
+                candidate_section = (
+                    section_lines
+                    + ([] if selected_articles else [section_name])
+                    + article_lines
+                )
+                candidate_doc = '\n'.join(doc_lines + candidate_section)
+                if len('\n\n'.join(lines + [candidate_doc])) > max_chars:
+                    truncated = True
+                    break
+                if not selected_articles:
+                    section_lines.append(section_name)
+                section_lines.extend(article_lines)
+                selected_articles.append(article)
+            if selected_articles:
+                doc_lines.extend(section_lines)
+                selected_sections.append(ContextSection(
+                    section_name, selected_articles,
+                ))
+            if truncated:
+                break
 
-    lines = []
-    used = 0
-    truncated = False
-    for doc in documents:
-        doc_header = '制度：%s' % doc.doc_title
-        if doc.doc_number:
-            doc_header += '（%s）' % doc.doc_number
-        block = [doc_header]
-        for section in doc.sections:
-            block.append(section.section)
-            for article in section.articles:
-                block.append('[%s %s]' % (article.article, article.chunk_id))
-                block.append(article.text)
-        doc_text = '\n'.join(block)
-        if used + len(doc_text) > max_chars:
-            remaining = max_chars - used
-            if remaining > 200:
-                doc_text = doc_text[:remaining]
-                lines.append(doc_text)
-            truncated = True
+        if selected_sections:
+            lines.append('\n'.join(doc_lines))
+            documents.append(ContextDocument(
+                doc_title=doc['doc_title'],
+                doc_number=doc['doc_number'],
+                category=doc['category'],
+                sections=selected_sections,
+                score=doc['score'],
+            ))
+        if truncated:
             break
-        lines.append(doc_text)
-        used += len(doc_text)
 
     return ContextPack(
         question=question,
